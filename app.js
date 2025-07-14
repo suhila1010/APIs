@@ -5,7 +5,7 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const multer = require('multer')
 const { v4: uuidv4 } = require('uuid');
-
+const { createServer } = require('http'); 
 const url = "mongodb+srv://sohilaahmed678:2UU03m0bUVXDjUwd@cluster0.9ijbpjx.mongodb.net/messages?retryWrites=true&w=majority&appName=Cluster0";
 
 const feedRouters = require("./routes/feed")
@@ -56,7 +56,15 @@ app.use((error, req, res, next) => {
 })
 
 mongoose.connect(url).then(result =>{
-    app.listen(8080)
+    const httpServer = createServer(app);
+    const io = require('./socket').init(httpServer)
+    io.on('connection', socket => {
+        // console.log('Client connected to WebSocket');
+    });
+
+    httpServer.listen(8080, () => {
+        console.log('Server is running on port 8080');
+    });
 }
 ).catch(err =>{
     console.log(err)
