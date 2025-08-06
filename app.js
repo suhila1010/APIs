@@ -6,10 +6,13 @@ const mongoose = require('mongoose')
 const multer = require('multer')
 const { v4: uuidv4 } = require('uuid');
 const { createServer } = require('http'); 
+const { graphqlHTTP } = require('express-graphql')
+
+const graphqlSchema = require('./graphql/schema')
+const graphqlResolver = require('./graphql/resolvers')
+
 const url = "mongodb+srv://sohilaahmed678:2UU03m0bUVXDjUwd@cluster0.9ijbpjx.mongodb.net/messages?retryWrites=true&w=majority&appName=Cluster0";
 
-const feedRouters = require("./routes/feed")
-const authRoutes = require('./routes/auth')
 
 const app = express();
 
@@ -41,9 +44,12 @@ app.use((req, res, next) =>{
     next()
 })
 
+app.use('/graphql' , graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue:graphqlResolver,
+    graphiql: true
+}))
 
-app.use('/feed',feedRouters)
-app.use('/auth', authRoutes)
 app.use((error, req, res, next) => {
     console.log(error)
     const status = error.statusCode || 500;
@@ -57,10 +63,6 @@ app.use((error, req, res, next) => {
 
 mongoose.connect(url).then(result =>{
     const httpServer = createServer(app);
-    const io = require('./socket').init(httpServer)
-    io.on('connection', socket => {
-        // console.log('Client connected to WebSocket');
-    });
 
     httpServer.listen(8080, () => {
         console.log('Server is running on port 8080');
