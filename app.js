@@ -10,6 +10,7 @@ const { graphqlHTTP } = require('express-graphql')
 
 const graphqlSchema = require('./graphql/schema')
 const graphqlResolver = require('./graphql/resolvers')
+const auth = require('./middleware/auth')
 
 const url = "mongodb+srv://sohilaahmed678:2UU03m0bUVXDjUwd@cluster0.9ijbpjx.mongodb.net/messages?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -47,11 +48,30 @@ app.use((req, res, next) =>{
     next()
 })
 
+app.use(auth)
+
+app.put('/post-image', (req, res) => {
+    if(!req.isAuth){
+       throw new Error('Not Authorized!')
+    }
+    if(!req.file){
+        return res.status(200).json({message: 'No file provided!'})
+    }
+    if(req.body.oldPath){
+        clearImage(req.body.oldPath)
+    }
+    const path = req.file.path.replace(/\\/g, '/')
+
+    return res.status(200).json({message: 'File stored.', filePath: path})
+})
+
+
+
 app.use('/graphql' , graphqlHTTP({
     schema: graphqlSchema,
     rootValue:graphqlResolver,
     graphiql: true,
-    formatError(err){
+    customFormatErrorFn(err){
         if(!err.originalError){
             return err
         }
@@ -88,3 +108,11 @@ mongoose.connect(url).then(result =>{
 ).catch(err =>{
     console.log(err)
 })
+
+
+const clearImage = filePath => {
+    filePath = path.join(__dirname, '..' , filePath);
+    fs.unlink(filePath, err => {
+        console.log(err)
+    })
+}
