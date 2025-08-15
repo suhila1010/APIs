@@ -11,6 +11,7 @@ const { graphqlHTTP } = require('express-graphql')
 const graphqlSchema = require('./graphql/schema')
 const graphqlResolver = require('./graphql/resolvers')
 const auth = require('./middleware/auth')
+const {clearImage} = require('./utils/file')
 
 const url = "mongodb+srv://sohilaahmed678:2UU03m0bUVXDjUwd@cluster0.9ijbpjx.mongodb.net/messages?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -108,11 +109,3 @@ mongoose.connect(url).then(result =>{
 ).catch(err =>{
     console.log(err)
 })
-
-
-const clearImage = filePath => {
-    filePath = path.join(__dirname, '..' , filePath);
-    fs.unlink(filePath, err => {
-        console.log(err)
-    })
-}
